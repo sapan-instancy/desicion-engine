@@ -5,7 +5,8 @@ from bs4 import BeautifulSoup
 
 pd.set_option('display.max_columns', None)
 
-
+# this file processes xml's present in Content folder of a course to a dataframe in the form:
+# ['pageId', 'elementid', 'type', 'value'] value contains text
 def process_text(content_directory_path, output_file_fullname=None):
     pageDf, pageCompDf, contentLibDf = xml_to_dataframe(content_directory_path)
     #dataframe pageDf columns: (['name', 'pageId', 'url'],
@@ -18,7 +19,7 @@ def process_text(content_directory_path, output_file_fullname=None):
         normDataDf.to_csv(output_file_fullname)
     return normDataDf
 
-
+#this is a private method that parses xml's and creates the required dataframes
 def xml_to_dataframe(dir_path):
 
     tree = ET.parse(os.path.join(dir_path, 'content.xml'))
@@ -53,6 +54,7 @@ def xml_to_dataframe(dir_path):
     return pageDf, pageCompDf, contentLibDf
 
 
+#this private method parses the node object containing text and extracts useful text without html markup out of it.
 def extract_text_from_pageobject(value):
     x = value
     if x != None:
@@ -62,7 +64,7 @@ def extract_text_from_pageobject(value):
     return x
 
 
-
+## to test this file, uncomment the lines below
 # directory_path = r'D:\MyDev\Working\8.4\Content\Sample Content\content\pages'
 # output_file_fullname=r'C:\Users\testuser\Documents\desicion_engine_1\tmp\processed_text_ergo.csv'
 # print(process_text(directory_path)['value'])

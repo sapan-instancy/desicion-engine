@@ -2,13 +2,16 @@ import logging, os, process_text as pt, re
 from gensim import corpora, models, similarities
 from collections import defaultdict
 from pprint import pprint
-
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 temp_directory = r'C:\Users\testuser\Documents\desicion_engine_1\tmp'
 
-ip_directory_path = r'D:\MyDev\Working\8.4\Content\Sample Content\content\pages'
+
+
+ip_directory_path = r'\\HOMEDRIVE2\Instancy Shared Data\sapan\Content Page by Page\content\pages'
 result_df = pt.process_text(ip_directory_path)
 
+
+# This private function converts text based data to vectors reqd for applying different Information retrival techniques
 def create_vectors():
     df = result_df
     documents = df[df['type'] == 'text']['value'].tolist()
@@ -34,7 +37,11 @@ def create_vectors():
 
 
 
-def transform_and_query(input_text):
+# This method applies Latent semantic indexing over the corpus and then returns similar elements to the input text
+def transform_to_lsi_and_query(input_text):
+
+    create_vectors()
+
     dictionary = None
     corpus = None
     if (os.path.exists(os.path.join(temp_directory, 'alltext.dict'))):
@@ -62,7 +69,8 @@ def transform_and_query(input_text):
 
 
 
-def transform_to_lda(input_text):
+# This method applies Latent Dirichlet allocation method over the corpus and then returns similar elements to the input text
+def transform_to_lda_and_query(input_text):
     dictionary = None
     corpus = None
     if (os.path.exists(os.path.join(temp_directory, 'alltext.dict'))):
@@ -70,10 +78,10 @@ def transform_to_lda(input_text):
     if (os.path.exists(os.path.join(temp_directory, 'alltext.dict'))):
         corpus = corpora.MmCorpus(os.path.join(temp_directory, 'alltext.mm'))
 
-    tfidf = models.TfidfModel(corpus)
-    corpus_tfidf = tfidf[corpus]
-    lda = models.LdaModel(corpus_tfidf, id2word=dictionary, num_topics=5)
-    corpus_lda = lda[corpus_tfidf]
+    # tfidf = models.TfidfModel(corpus)
+    # corpus_tfidf = tfidf[corpus]
+    lda = models.LdaModel(corpus, id2word=dictionary, num_topics=5)
+    corpus_lda = lda[corpus]
     index = similarities.MatrixSimilarity(corpus_lda)
     index.save(os.path.join(temp_directory, 'alltext_lda.index'))
 
@@ -91,7 +99,8 @@ def transform_to_lda(input_text):
 
 
 
-def transform_to_tfidf(input_text):
+# This method applies Normalized tfidf indexing over the corpus and then returns similar elements to the input text
+def transform_to_tfidf_and_query(input_text):
     dictionary = None
     corpus = None
     if (os.path.exists(os.path.join(temp_directory, 'alltext.dict'))):
@@ -99,7 +108,7 @@ def transform_to_tfidf(input_text):
     if (os.path.exists(os.path.join(temp_directory, 'alltext.mm'))):
         corpus = corpora.MmCorpus(os.path.join(temp_directory, 'alltext.mm'))
 
-    tfidf = models.TfidfModel(corpus)
+    tfidf = models.TfidfModel(corpus, normalize=True)
     corpus_tfidf = tfidf[corpus]
 
     index = similarities.MatrixSimilarity(corpus_tfidf)
@@ -111,17 +120,19 @@ def transform_to_tfidf(input_text):
     sims = sorted(enumerate(sims), key=lambda item: -item[1])  # sort in descending order
 
     relv_sims = sims[0:3]
-    print(relv_sims)
+    print(sims)
     return [return_df_row(id, relevance) for (id, relevance) in relv_sims if
           return_df_row(id, relevance)['text'] != None ]
 
 
 
+#this is a private method used to return the selected row based on the 'id' from a tuple element on the similarity list
 def return_df_row(id, relevance):
-   return { 'pageNum': id, 'pageId': result_df.loc[id]['pageId'], 'elementId': result_df.loc[id]['elementid'], 'text': make_text_snippet(result_df.loc[id]['value']) }
+   return { 'pageNum': id, 'pageId': result_df.loc[id]['pageId'], 'elementId': result_df.loc[id]['elementid'], 'text': result_df.loc[id]['value'] }
 
 
 
+# trims text to 71 characters for display in cards
 def make_text_snippet(value):
     if value != None:
         text = re.sub( '\n', '', value)
@@ -132,9 +143,6 @@ def make_text_snippet(value):
 
 
 
-
-
-# create_vectors()
-# pprint(transform_to_tfidf('position shoulders correctly'))
-# st = result_df.loc[[61]]['value']
-# print(st)
+## to test this modules methods, uncomment the lines below
+# pprint(transform_to_tfidf_and_query('shoulders'))
+# pprint(transform_to_lda('position shoulders correctly'))

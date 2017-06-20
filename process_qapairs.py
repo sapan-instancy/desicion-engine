@@ -9,10 +9,8 @@ temp_directory = r'C:\Users\testuser\Documents\desicion_engine_1\tmp'
 qa_file = r'C:\Users\testuser\Documents\desicion_engine_1\question-answers.xlsx'
 df = pd.read_excel(qa_file)
 
-def process_qapairs():
-    print(df)
 
-
+# This private function converts text based data to vectors reqd for applying different Information retrival techniques
 def create_vectors():
     documents = df['question'].tolist()
     # remove common words and tokenize
@@ -33,8 +31,11 @@ def create_vectors():
     corpora.MmCorpus.serialize(os.path.join(temp_directory, 'pre_questions.mm'), corpus)
 
 
+# This method applies Normalized tfidf indexing over the corpus and then returns similar elements to the input text
+def transform_to_tfidf_and_query(input_text):
 
-def transform_to_tfidf(input_text):
+    create_vectors()
+
     dictionary = None
     corpus = None
     if (os.path.exists(os.path.join(temp_directory, 'pre_questions.dict'))):
@@ -42,14 +43,13 @@ def transform_to_tfidf(input_text):
     if (os.path.exists(os.path.join(temp_directory, 'pre_questions.mm'))):
         corpus = corpora.MmCorpus(os.path.join(temp_directory, 'pre_questions.mm'))
 
-    tfidf = models.TfidfModel(corpus)
-    corpus_tfidf = tfidf[corpus]
-
-    index = similarities.MatrixSimilarity(corpus_tfidf)
-    index.save(os.path.join(temp_directory, 'pre_questions.index'))
+    lda = models.LdaModel(corpus, id2word=dictionary, num_topics=5)
+    corpus_lda = lda[corpus]
+    index = similarities.MatrixSimilarity(corpus_lda)
+    index.save(os.path.join(temp_directory, 'alltext_lda.index'))
 
     vec_bow = dictionary.doc2bow(input_text.lower().split())
-    vec_lsi = tfidf[vec_bow]
+    vec_lsi = lda[vec_bow]
     sims = index[vec_lsi]
     sims = sorted(enumerate(sims), key=lambda item: -item[1])  # sort in descending order
 
@@ -58,5 +58,5 @@ def transform_to_tfidf(input_text):
     id, acc = relv_sims[0]
     return df.loc[id]
 
-# create_vectors()
-pprint(transform_to_tfidf('what are some common ergonomics types of injuries'))
+
+pprint(transform_to_tfidf('correct head position'))
