@@ -5,14 +5,17 @@ from bs4 import BeautifulSoup
 
 pd.set_option('display.max_columns', None)
 
-# id pageid poid value topic
-def process_text(directory_path):
-    pageDf, pageCompDf, contentLibDf = xml_to_dataframe(directory_path)
-    #pageDf: (['name', 'pageId', 'url'],
-    #pageCompDf: (['pageId', 'poid', 'type'],
-    #contentLibDf: (['id', 'value'], dtype='object')
+
+def process_text(content_directory_path, output_file_fullname=None):
+    pageDf, pageCompDf, contentLibDf = xml_to_dataframe(content_directory_path)
+    #dataframe pageDf columns: (['name', 'pageId', 'url'],
+    #dataframe pageCompDf columns: (['pageId', 'poid', 'elementid', 'type'],
+    #dataframe contentLibDf columns: (['id', 'value'], dtype='object')
     normDataDf = pd.merge(pageCompDf, contentLibDf, how='inner', left_on='poid', right_on='id')
     normDataDf.drop('id', axis=1, inplace=True)
+    normDataDf.drop('poid', axis=1, inplace=True)
+    if output_file_fullname != None:
+        normDataDf.to_csv(output_file_fullname)
     return normDataDf
 
 
@@ -32,7 +35,7 @@ def xml_to_dataframe(dir_path):
 
         for po in root.iter('pageobject'):
             if po.attrib['type'] in ['text', 'image']:
-                pageCompList.append({ 'pageId' : record['pageId'], 'poid': po.attrib['poid'], 'type': po.attrib['type'] })
+                pageCompList.append({ 'pageId' : record['pageId'], 'poid': po.attrib['poid'], 'elementid': po.attrib['id'], 'type': po.attrib['type'] })
     pageCompDf = pd.DataFrame(data=pageCompList)
 
     contentLibList =[]
@@ -61,4 +64,5 @@ def extract_text_from_pageobject(value):
 
 
 # directory_path = r'D:\MyDev\Working\8.4\Content\Sample Content\content\pages'
+# output_file_fullname=r'C:\Users\testuser\Documents\desicion_engine_1\tmp\processed_text_ergo.csv'
 # print(process_text(directory_path)['value'])

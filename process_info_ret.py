@@ -96,7 +96,7 @@ def transform_to_tfidf(input_text):
     corpus = None
     if (os.path.exists(os.path.join(temp_directory, 'alltext.dict'))):
         dictionary = corpora.Dictionary.load(os.path.join(temp_directory, 'alltext.dict'))
-    if (os.path.exists(os.path.join(temp_directory, 'alltext.dict'))):
+    if (os.path.exists(os.path.join(temp_directory, 'alltext.mm'))):
         corpus = corpora.MmCorpus(os.path.join(temp_directory, 'alltext.mm'))
 
     tfidf = models.TfidfModel(corpus)
@@ -118,7 +118,7 @@ def transform_to_tfidf(input_text):
 
 
 def return_df_row(id, relevance):
-   return { 'pageNum': id, 'pageId': result_df.loc[id]['pageId'], 'text': make_text_snippet(result_df.loc[id]['value']) }
+   return { 'pageNum': id, 'pageId': result_df.loc[id]['pageId'], 'elementId': result_df.loc[id]['elementid'], 'text': make_text_snippet(result_df.loc[id]['value']) }
 
 
 
@@ -135,6 +135,6 @@ def make_text_snippet(value):
 
 
 # create_vectors()
-pprint(transform_to_tfidf('position shoulders correctly'))
+# pprint(transform_to_tfidf('position shoulders correctly'))
 # st = result_df.loc[[61]]['value']
 # print(st)
